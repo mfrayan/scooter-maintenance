@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سجل صيانة الاسكوتر</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --card: #222222;
+      --border: #2e2e2e;
+      --accent: #ff5c00;
+      --accent-dim: rgba(255, 92, 0, 0.12);
+      --accent-glow: rgba(255, 92, 0, 0.25);
+      --text: #f0f0f0;
+      --text-muted: #888;
+      --text-faint: #555;
+      --green: #22c55e;
+      --yellow: #eab308;
+      --red: #ef4444;
+      --blue: #3b82f6;
+    }
+
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+    }
+
+    /* ── Header ── */
+    .header {
+      max-width: 1100px;
+      margin: 0 auto 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+    }
+
+    .header-icon {
+      width: 52px; height: 52px;
+      background: var(--accent);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      flex-shrink: 0;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .header-text h1 {
+      font-size: 1.7rem;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+    }
+
+    .header-text p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: 2px;
+    }
+
+    /* ── Stats bar ── */
+    .stats {
+      max-width: 1100px;
+      margin: 0 auto 28px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+
+    .stat-card .label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-card .value {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: var(--accent);
+    }
+
+    .stat-card .sub {
+      font-size: 0.7rem;
+      color: var(--text-faint);
+      margin-top: 2px;
+    }
+
+    /* ── Controls ── */
+    .controls {
+      max-width: 1100px;
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-add {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-family: 'Cairo', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 8px;
+      transition: opacity 0.2s, transform 0.15s;
+      box-shadow: 0 0 14px var(--accent-glow);
+    }
+
+    .btn-add:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    .btn-print {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-family: 'Cairo', sans-serif;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .btn-print:hover { border-color: var(--accent); color: var(--accent); }
+
+    .filter-select {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-family: 'Cairo', sans-serif;
+      font-size: 0.85rem;
+      cursor: pointer;
+      margin-right: auto;
+    }
+
+    /* ── Table wrapper ── */
+    .table-wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    thead th {
+      background: var(--card);
+      padding: 14px 16px;
+      text-align: right;
+      font-weight: 700;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    thead th:first-child { border-radius: 0; }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    tbody td {
+      padding: 14px 16px;
+      vertical-align: middle;
+    }
+
+    /* ── Badge ── */
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .badge-green  { background: rgba(34,197,94,.15);  color: var(--green); }
+    .badge-yellow { background: rgba(234,179,8,.15);  color: var(--yellow); }
+    .badge-red    { background: rgba(239,68,68,.15);  color: var(--red); }
+    .badge-blue   { background: rgba(59,130,246,.15); color: var(--blue); }
+
+    /* ── Type tag ── */
+    .type-tag {
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* ── Action buttons ── */
+    .actions { display: flex; gap: 6px; justify-content: flex-end; }
+
+    .icon-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      width: 30px; height: 30px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .icon-btn:hover { border-color: var(--accent); background: var(--accent-dim); }
+
+    /* ── Empty row ── */
+    .empty-row td {
+      text-align: center;
+      padding: 48px;
+      color: var(--text-faint);
+    }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.7);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+      width: min(500px, 95vw);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal h2 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin-bottom: 20px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .modal h2 span { color: var(--accent); }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .form-grid .full { grid-column: 1 / -1; }
+
+    .field label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .field input, .field select, .field textarea {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-family: 'Cairo', sans-serif;
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .field textarea { resize: vertical; min-height: 72px; }
+
+    .modal-actions {
+      display: flex; gap: 10px; justify-content: flex-end;
+      margin-top: 22px;
+    }
+
+    .btn-save {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 24px;
+      font-family: 'Cairo', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-cancel {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-family: 'Cairo', sans-serif;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    /* ── Mileage cell ── */
+    .km { color: var(--text-muted); font-size: 0.82rem; }
+
+    /* ── Next alert ── */
+    .next-due { font-size: 0.78rem; color: var(--text-muted); }
+
+    /* ── Print ── */
+    @media print {
+      body { background: #fff; color: #000; }
+      .controls, .modal-overlay, .actions { display: none !important; }
+      .table-wrap { border: 1px solid #ccc; }
+      thead th { background: #f0f0f0; color: #333; }
+    }
+
+    @media (max-width: 700px) {
+      .stats { grid-template-columns: 1fr 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      table { font-size: 0.8rem; }
+      thead th, tbody td { padding: 10px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-icon">🛵</div>
+  <div class="header-text">
+    <h1>سجل صيانة الاسكوتر</h1>
+    <p>تتبع جميع مواعيد ومهام الصيانة في مكان واحد</p>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats">
+  <div class="stat-card">
+    <div class="label">إجمالي السجلات</div>
+    <div class="value" id="stat-total">0</div>
+    <div class="sub">عملية صيانة</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">مكتملة</div>
+    <div class="value" id="stat-done" style="color:var(--green)">0</div>
+    <div class="sub">تم تنفيذها</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">قادمة</div>
+    <div class="value" id="stat-upcoming" style="color:var(--yellow)">0</div>
+    <div class="sub">مجدولة</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">إجمالي التكلفة</div>
+    <div class="value" id="stat-cost" style="color:var(--accent)">0</div>
+    <div class="sub">ريال / درهم</div>
+  </div>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+  <button class="btn-add" onclick="openModal()">＋ إضافة صيانة</button>
+  <button class="btn-print" onclick="window.print()">🖨️ طباعة</button>
+  <select class="filter-select" onchange="filterRecords(this.value)">
+    <option value="all">جميع السجلات</option>
+    <option value="مكتملة">مكتملة</option>
+    <option value="مجدولة">مجدولة</option>
+    <option value="متأخرة">متأخرة</option>
+    <option value="ملغاة">ملغاة</option>
+  </select>
+</div>
+
+<!-- Table -->
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>تاريخ الصيانة</th>
+        <th>نوع الصيانة</th>
+        <th>الوصف / التفاصيل</th>
+        <th>قراءة العداد (كم)</th>
+        <th>الموعد القادم</th>
+        <th>التكلفة</th>
+        <th>الحالة</th>
+        <th>ملاحظات</th>
+        <th>إجراءات</th>
+      </tr>
+    </thead>
+    <tbody id="records-body">
+      <tr class="empty-row" id="empty-msg">
+        <td colspan="10">🛵 لا توجد سجلات بعد — أضف أول صيانة الآن</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h2>🛠️ <span>تسجيل صيانة جديدة</span></h2>
+    <div class="form-grid">
+      <div class="field">
+        <label>تاريخ الصيانة *</label>
+        <input type="date" id="f-date">
+      </div>
+      <div class="field">
+        <label>قراءة العداد (كم) *</label>
+        <input type="number" id="f-km" placeholder="مثال: 5000">
+      </div>
+      <div class="field">
+        <label>نوع الصيانة *</label>
+        <select id="f-type">
+          <option value="">اختر النوع</option>
+          <option>تغيير زيت المحرك</option>
+          <option>تغيير فلتر الهواء</option>
+          <option>تغيير شمعة الإشعال</option>
+          <option>فحص الفرامل</option>
+          <option>تغيير إطارات</option>
+          <option>فحص البطارية</option>
+          <option>تغيير سلسلة القيادة</option>
+          <option>فحص دوري شامل</option>
+          <option>صيانة نظام الوقود</option>
+          <option>أخرى</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>الحالة</label>
+        <select id="f-status">
+          <option value="مكتملة">✅ مكتملة</option>
+          <option value="مجدولة">📅 مجدولة</option>
+          <option value="متأخرة">⚠️ متأخرة</option>
+          <option value="ملغاة">❌ ملغاة</option>
+        </select>
+      </div>
+      <div class="field full">
+        <label>الوصف / التفاصيل</label>
+        <input type="text" id="f-desc" placeholder="مثال: تغيير زيت 10W-40 + فلتر جديد">
+      </div>
+      <div class="field">
+        <label>الموعد القادم (تاريخ)</label>
+        <input type="date" id="f-next-date">
+      </div>
+      <div class="field">
+        <label>أو عند (كم القادمة)</label>
+        <input type="number" id="f-next-km" placeholder="مثال: 7000">
+      </div>
+      <div class="field">
+        <label>التكلفة</label>
+        <input type="number" id="f-cost" placeholder="مثال: 150">
+      </div>
+      <div class="field">
+        <label>الفني / الورشة</label>
+        <input type="text" id="f-garage" placeholder="اسم الورشة أو الفني">
+      </div>
+      <div class="field full">
+        <label>ملاحظات إضافية</label>
+        <textarea id="f-notes" placeholder="أي ملاحظات إضافية..."></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
+      <button class="btn-save" onclick="saveRecord()">💾 حفظ السجل</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwuphaBbGDxWIu1gT6wPAqmnAJSyIr6t0ql9pKqvw52atoyimb-yAEzLzBSjQzuIfn7/exec';
+
+  let records = [];
+  let editId  = null;
+  let editRowIndex = null; // 1-based row index in sheet (excluding header)
+  let filterStatus = 'all';
+
+  const statusBadge = {
+    'مكتملة': 'badge-green',
+    'مجدولة': 'badge-blue',
+    'متأخرة': 'badge-red',
+    'ملغاة':  'badge-yellow'
+  };
+
+  /* ── Toast ── */
+  function toast(msg, type = 'info') {
+    let t = document.getElementById('toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'toast';
+      t.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+        padding:12px 24px;border-radius:12px;font-family:'Cairo',sans-serif;font-size:.9rem;
+        font-weight:700;z-index:999;transition:opacity .4s;pointer-events:none;`;
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.style.background = type === 'success' ? '#22c55e' : type === 'error' ? '#ef4444' : '#ff5c00';
+    t.style.color = '#fff';
+    t.style.opacity = '1';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.style.opacity = '0', 3000);
+  }
+
+  /* ── Loading overlay ── */
+  function setLoading(on) {
+    let el = document.getElementById('loading-overlay');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'loading-overlay';
+      el.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,.5);
+        display:flex;align-items:center;justify-content:center;z-index:200;
+        font-family:'Cairo',sans-serif;color:#fff;font-size:1.1rem;font-weight:700;gap:12px;`;
+      el.innerHTML = '<span style="font-size:1.6rem">⏳</span> جاري التحميل...';
+      document.body.appendChild(el);
+    }
+    el.style.display = on ? 'flex' : 'none';
+  }
+
+  /* ── Fetch all records from Sheet ── */
+  async function loadFromSheet() {
+    setLoading(true);
+    try {
+      const res  = await fetch(SHEET_URL);
+      const data = await res.json();
+      // data is array of objects with keys matching header row
+      records = data.map((row, i) => ({
+        rowIndex: i + 1, // 1-based, sheet row = rowIndex + 1 (skip header)
+        id:       i,
+        date:     row.date     || '',
+        km:       row.km       || '',
+        type:     row.type     || '',
+        desc:     row.desc     || '',
+        nextDate: row.nextDate || '',
+        nextKm:   row.nextKm   || '',
+        cost:     row.cost     || '',
+        garage:   row.garage   || '',
+        status:   row.status   || '',
+        notes:    row.notes    || ''
+      }));
+      render();
+      toast('تم تحميل البيانات من Google Sheets ✅', 'success');
+    } catch (e) {
+      toast('تعذّر الاتصال بـ Google Sheets ❌', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  /* ── Save (add or update) ── */
+  async function saveToSheet(record, action) {
+    const payload = { action, ...record };
+    const res = await fetch(SHEET_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    return res.json();
+  }
+
+  /* ── Modal ── */
+  function openModal(rowIndex = null) {
+    editRowIndex = rowIndex;
+    clearForm();
+    if (rowIndex !== null) {
+      const r = records.find(x => x.rowIndex === rowIndex);
+      if (r) fillForm(r);
+      document.querySelector('.modal h2 span').textContent = 'تعديل السجل';
+    } else {
+      document.querySelector('.modal h2 span').textContent = 'تسجيل صيانة جديدة';
+      document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+    }
+    document.getElementById('modal-overlay').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+    editRowIndex = null;
+  }
+
+  function clearForm() {
+    ['f-date','f-km','f-type','f-desc','f-next-date','f-next-km','f-cost','f-garage','f-notes','f-status']
+      .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    document.getElementById('f-status').value = 'مكتملة';
+  }
+
+  function fillForm(r) {
+    document.getElementById('f-date').value      = r.date     || '';
+    document.getElementById('f-km').value        = r.km       || '';
+    document.getElementById('f-type').value      = r.type     || '';
+    document.getElementById('f-desc').value      = r.desc     || '';
+    document.getElementById('f-next-date').value = r.nextDate || '';
+    document.getElementById('f-next-km').value   = r.nextKm   || '';
+    document.getElementById('f-cost').value      = r.cost     || '';
+    document.getElementById('f-garage').value    = r.garage   || '';
+    document.getElementById('f-notes').value     = r.notes    || '';
+    document.getElementById('f-status').value    = r.status   || 'مكتملة';
+  }
+
+  async function saveRecord() {
+    const date = document.getElementById('f-date').value;
+    const type = document.getElementById('f-type').value;
+    if (!date || !type) { alert('يرجى تعبئة تاريخ الصيانة ونوعها على الأقل.'); return; }
+
+    const record = {
+      date,
+      km:       document.getElementById('f-km').value,
+      type,
+      desc:     document.getElementById('f-desc').value,
+      nextDate: document.getElementById('f-next-date').value,
+      nextKm:   document.getElementById('f-next-km').value,
+      cost:     document.getElementById('f-cost').value,
+      garage:   document.getElementById('f-garage').value,
+      notes:    document.getElementById('f-notes').value,
+      status:   document.getElementById('f-status').value
+    };
+
+    closeModal();
+    setLoading(true);
+
+    try {
+      if (editRowIndex !== null) {
+        record.rowIndex = editRowIndex;
+        await saveToSheet(record, 'update');
+        toast('تم تحديث السجل ✅', 'success');
+      } else {
+        await saveToSheet(record, 'add');
+        toast('تم حفظ السجل في Google Sheets ✅', 'success');
+      }
+      await loadFromSheet();
+    } catch (e) {
+      toast('حدث خطأ أثناء الحفظ ❌', 'error');
+      setLoading(false);
+    }
+  }
+
+  async function deleteRecord(rowIndex) {
+    if (!confirm('هل أنت متأكد من حذف هذا السجل؟')) return;
+    setLoading(true);
+    try {
+      await saveToSheet({ rowIndex }, 'delete');
+      toast('تم حذف السجل ✅', 'success');
+      await loadFromSheet();
+    } catch (e) {
+      toast('حدث خطأ أثناء الحذف ❌', 'error');
+      setLoading(false);
+    }
+  }
+
+  function filterRecords(val) {
+    filterStatus = val;
+    render();
+  }
+
+  function formatDate(d) {
+    if (!d) return '—';
+    const parts = String(d).split('-');
+    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    return d;
+  }
+
+  function render() {
+    const filtered = filterStatus === 'all'
+      ? records
+      : records.filter(r => r.status === filterStatus);
+
+    const sorted = [...filtered].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+    const tbody    = document.getElementById('records-body');
+    const emptyMsg = document.getElementById('empty-msg');
+
+    Array.from(tbody.querySelectorAll('tr:not(#empty-msg)')).forEach(r => r.remove());
+
+    if (sorted.length === 0) {
+      emptyMsg.style.display = '';
+    } else {
+      emptyMsg.style.display = 'none';
+      sorted.forEach((r, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="color:var(--text-faint);font-size:0.8rem">${i + 1}</td>
+          <td>${formatDate(r.date)}</td>
+          <td><span class="type-tag">${r.type}</span></td>
+          <td>${r.desc || '—'}</td>
+          <td>${r.km ? r.km + ' <span class="km">كم</span>' : '—'}</td>
+          <td class="next-due">
+            ${r.nextDate ? formatDate(r.nextDate) : ''}
+            ${r.nextKm ? (r.nextDate ? '<br>' : '') + r.nextKm + ' كم' : ''}
+            ${!r.nextDate && !r.nextKm ? '—' : ''}
+          </td>
+          <td>${r.cost ? r.cost + ' <span class="km">ر.س</span>' : '—'}</td>
+          <td><span class="badge ${statusBadge[r.status] || 'badge-blue'}">${r.status || '—'}</span></td>
+          <td style="font-size:0.8rem;color:var(--text-muted);max-width:140px">
+            ${r.notes || (r.garage ? '🔧 ' + r.garage : '—')}
+          </td>
+          <td>
+            <div class="actions">
+              <button class="icon-btn" title="تعديل" onclick="openModal(${r.rowIndex})">✏️</button>
+              <button class="icon-btn" title="حذف"   onclick="deleteRecord(${r.rowIndex})">🗑️</button>
+            </div>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Stats
+    const total    = records.length;
+    const done     = records.filter(r => r.status === 'مكتملة').length;
+    const upcoming = records.filter(r => r.status === 'مجدولة').length;
+    const cost     = records.reduce((s, r) => s + (parseFloat(r.cost) || 0), 0);
+
+    document.getElementById('stat-total').textContent    = total;
+    document.getElementById('stat-done').textContent     = done;
+    document.getElementById('stat-upcoming').textContent = upcoming;
+    document.getElementById('stat-cost').textContent     = cost.toLocaleString('ar');
+  }
+
+  document.getElementById('modal-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  // Initial load
+  loadFromSheet();
+</script>
+</body>
+</html>
